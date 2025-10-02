@@ -339,6 +339,7 @@ class GoogleAuthSerializer(serializers.Serializer):
             "message": "User authenticated successfully",
             "access": tokens["access"],
             "refresh": tokens["refresh"],
+            "created": created,
             "data": {
                 "user_profile": UserSerializer(user).data  # profile_pic will return correct URL
             },
@@ -386,50 +387,78 @@ class FacebookAuthSerializer(serializers.Serializer):
 
 
 import jwt
-
+from django.conf import settings
+import requests
+import uuid
 
 class AppleAuthSerializer(serializers.Serializer):
-    identity_token = serializers.CharField()
+    identity_token = serializers.CharField(required=True)
 
     def validate(self, attrs):
         identity_token = attrs.get("identity_token")
-        print("Apple Identity Token:", identity_token)  # Debug
 
         try:
-            # Decode the JWT identity token sent by Apple
-            apple_data = jwt.decode(identity_token, options={"verify_signature": False})
-            # You can also implement full signature verification using Apple's public keys
-            print("Decoded Apple data:", apple_data)
-        except jwt.PyJWTError:
+            # Fetch Apple’s public keys
+            apple_keys = requests.get("https://appleid.apple.com/auth/keys").json()["keys"]
+
+            # Decode header to identify correct key
+            headers = jwt.get_unverified_header(identity_token)
+            apple_key = next((key for key in apple_keys if key["kid"] == headers["kid"]), None)
+            if not apple_key:
+                raise serializers.ValidationError("Unable to find Apple public key.")
+
+            # Build public key
+            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(apple_key)
+
+            # Verify and decode token
+            apple_data = jwt.decode(
+                identity_token,
+                public_key,
+                algorithms=["RS256"],
+                audience=settings.APPLE_CLIENT_ID,  # e.g. com.zachariah.mapd
+                issuer="https://appleid.apple.com",
+            )
+
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError("Apple identity token expired.")
+        except jwt.InvalidTokenError:
             raise serializers.ValidationError("Invalid Apple identity token.")
+        except Exception as e:
+            raise serializers.ValidationError(f"Apple auth failed: {str(e)}")
 
         email = apple_data.get("email")
-        full_name = apple_data.get("name", "")  # optional
+        apple_id = apple_data.get("sub")
+        full_name = apple_data.get("name", "Apple User")
 
         if not email:
             raise serializers.ValidationError("Apple token missing email.")
 
-        try:
-            user, created = UserAuth.objects.get_or_create(
-                email=email,
-                defaults={
-                    "full_name": full_name,
-                },
-            )
-        except Exception:
-            raise serializers.ValidationError("Could not create or retrieve user.")
+        # Ensure unique username for AbstractUser
+        defaults = {
+            "full_name": full_name,
+            "apple_id": apple_id,
+            "is_verified": True,
+            "is_active": True,
+            "username": str(uuid.uuid4()),   # generate random unique username
+        }
+
+        user, created = UserAuth.objects.get_or_create(email=email, defaults=defaults)
 
         if created:
             user.set_unusable_password()
-            user.is_verified = True
-            user.save()
+            user.save(update_fields=["apple_id", "full_name", "is_verified", "is_active", "username"])
 
+        # Generate tokens
         tokens = generate_tokens_for_user(user)
+
+        # 🔑 Use your full UserSerializer here
+        user_data = UserSerializer(user).data
 
         return {
             "access": tokens["access"],
             "refresh": tokens["refresh"],
-            "user_profile": {"id": user.id, "email": user.email, "full_name": user.full_name}
+            'created': created,
+            "user_profile": user_data,
         }
 
 

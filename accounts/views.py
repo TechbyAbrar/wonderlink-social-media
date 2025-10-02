@@ -402,22 +402,29 @@ class FacebookLoginAPIView(APIView):
 
 from .serializers import AppleAuthSerializer
 
+
 class AppleLoginAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = AppleAuthSerializer(data=request.data)
         if serializer.is_valid():
-            return Response({
-                "success": True,
-                "message": "User authenticated successfully",
-                "data": serializer.validated_data
-            }, status=status.HTTP_200_OK)
-        return Response({
-            "success": False,
-            "message": "Validation Failed! Plase check everything properly and try again later.",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "success": True,
+                    "message": "User authenticated successfully",
+                    "data": serializer.validated_data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {
+                "success": False,
+                "message": "Apple login failed",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 

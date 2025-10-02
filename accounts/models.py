@@ -54,6 +54,8 @@ class UserAuth(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
+    apple_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    
     date_joined = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     
