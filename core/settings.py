@@ -35,7 +35,15 @@ SECRET_KEY = 'django-insecure-7ej%jw1)yfg)g@42x56du(!%&*cf^n-!!l*%b_9tc9y-9@9gmp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '172.19.86.115',  # WSL IP
+    '10.10.12.111',   # Windows LAN IP (if needed)
+]
+
 
 AUTH_USER_MODEL = 'accounts.UserAuth'
 
@@ -53,6 +61,7 @@ INSTALLED_APPS = [
     "channels",
     'rest_framework',
     'corsheaders',
+    "drf_spectacular",
     # local apps
     'accounts',
     'privacy_policy',
@@ -160,13 +169,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework settings with JWT authentication
+# REST Framework settings with JWT authentication, drf spectacular, and pagination
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 30,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 from datetime import timedelta

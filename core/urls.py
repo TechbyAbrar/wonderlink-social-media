@@ -19,13 +19,32 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    
     path('api/v1/accounts/', include('accounts.urls')),
     path('api/v1/locations/', include('locations.urls')),
     path('api/v1/privacy_policy/', include('privacy_policy.urls')),
     path("api/v1/leaderboard/", include("leaderboard.urls")),
     path("api/v1/friend/", include("friend_system.urls")),
     path('api/v1/chat/', include('chat.urls')),
+    
+    path('admin/', admin.site.urls),
+    
+    # API schema
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    
+    # Swagger UI
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    
+    # Redoc UI
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+

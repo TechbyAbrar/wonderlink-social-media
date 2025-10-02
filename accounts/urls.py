@@ -15,7 +15,7 @@ urlpatterns = [
     path('user/<int:pk>/', SpecificUserView.as_view(), name='specific-user'),
     path('googleLogin/', GoogleLoginAPIView.as_view(), name='google-login'),
     path('facebookLogin/', FacebookLoginAPIView.as_view(), name='facebook-login'),
-    path('appleLogin/', AppleLoginAPIView.as_view(), name='apple-login'),
+    path('apple-login/', AppleLoginAPIView.as_view(), name='apple-login'),
     path('dashboard/users-list/', AdminUserListAPIView.as_view(), name='admin-user-list'),
     
 ]
