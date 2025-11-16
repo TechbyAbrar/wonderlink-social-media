@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (SignupView, VerifyEmailOTPView, ResendOTPView,
                     LoginView, ForgetPasswordView, ResetPasswordView, UpdateProfileView, 
-                    SpecificUserView, VerifyForgetPasswordOTPView, GoogleLoginAPIView, FacebookLoginAPIView, AdminUserListAPIView, AppleLoginAPIView)
+                    SpecificUserView, VerifyForgetPasswordOTPView, GoogleLoginAPIView,
+                    FacebookLoginAPIView, AdminUserListAPIView, AppleLoginAPIView, ContactMatchAPIView)
 
 urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),
@@ -17,5 +18,6 @@ urlpatterns = [
     path('facebookLogin/', FacebookLoginAPIView.as_view(), name='facebook-login'),
     path('apple-login/', AppleLoginAPIView.as_view(), name='apple-login'),
     path('dashboard/users-list/', AdminUserListAPIView.as_view(), name='admin-user-list'),
+    path("match-contacts/", ContactMatchAPIView.as_view(), name="match-contacts"),
     
 ]

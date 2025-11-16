@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from .serializers import (
     SignupSerializer, VerifyEmailOTPSerializer,
     UserSerializer, ResendOTPSerializer, LoginSerializer,
-    ForgetPasswordSerializer, ResetPasswordSerializer, FacebookAuthSerializer, GoogleAuthSerializer
+    ForgetPasswordSerializer, ResetPasswordSerializer, FacebookAuthSerializer, GoogleAuthSerializer, ContactMatchUserSerializer
 )
 from .utils import generate_otp, send_otp_email, generate_tokens_for_user
 from django.utils import timezone
@@ -483,3 +483,27 @@ class AdminUserListAPIView(APIView):
         except Exception as e:
             return error_response(f"Something went wrong: {str(e)}", status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
+# contact match
+class ContactMatchAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        contacts = request.data.get("contacts")
+
+        if not contacts or not isinstance(contacts, list):
+            return Response({"error": "contacts must be a non-empty list"}, status=400)
+
+        normalized = [c.replace(" ", "").replace("-", "") for c in contacts]
+
+        matched = UserAuth.objects.filter(
+            phone__in=normalized,
+            is_active=True,
+            public_profile=True,
+            connect_contacts=True,
+        ).only("full_name", "username", "profile_pic", "profile_pic_url")
+
+        data = ContactMatchUserSerializer(matched, many=True).data
+
+        return Response({"matched_users": data})

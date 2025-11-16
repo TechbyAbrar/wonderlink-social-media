@@ -480,3 +480,20 @@ class AdminUserMinimalSerializer(serializers.ModelSerializer):
             'visited',      # Visited countries count
             'date_joined',  # Date
         ]
+        
+        
+class ContactMatchUserSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+    class Meta:
+        model = UserAuth
+        fields = ["full_name", "username", "profile_pic"]
+
+    def get_profile_pic(self, obj):
+        if obj.profile_pic_url:
+            return obj.profile_pic_url
+        if obj.profile_pic:
+            try:
+                return obj.profile_pic.url
+            except:
+                pass
+        return '/media/default_profile_pic.png'
