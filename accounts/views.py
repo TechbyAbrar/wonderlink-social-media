@@ -495,15 +495,17 @@ class ContactMatchAPIView(APIView):
         if not contacts or not isinstance(contacts, list):
             return Response({"error": "contacts must be a non-empty list"}, status=400)
 
+        # Normalize phone numbers
         normalized = [c.replace(" ", "").replace("-", "") for c in contacts]
 
+        # Fetch matched users (safe query)
         matched = UserAuth.objects.filter(
             phone__in=normalized,
             is_active=True,
             public_profile=True,
             connect_contacts=True,
-        ).only("full_name", "username", "profile_pic", "profile_pic_url")
+        ).only("full_name", "username", "profile_pic")  # do NOT include profile_pic_url here
 
-        data = ContactMatchUserSerializer(matched, many=True).data
+        serialized = ContactMatchUserSerializer(matched, many=True).data
 
-        return Response({"matched_users": data})
+        return Response({"matched_users": serialized}, status=200)

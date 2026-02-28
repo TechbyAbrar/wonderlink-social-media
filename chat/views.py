@@ -35,19 +35,6 @@ class ThreadListCreateAPIView(APIView):
 class MessageListCreateAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = MessagePagination
-
-    # def get(self, request):
-    #     thread_id = request.query_params.get("thread")
-    #     if not thread_id:
-    #         return Response({"detail": "thread query param is required"}, 400)
-    #     thread = get_object_or_404(ChatThread, pk=thread_id)
-    #     if request.user.id not in [thread.user_a_id, thread.user_b_id]:
-    #         return Response({"detail": "Not allowed"}, 403)
-    #     messages = Message.objects.filter(thread=thread).select_related("sender").order_by("created_at")
-    #     paginator = self.pagination_class()
-    #     paginated = paginator.paginate_queryset(messages, request)
-    #     serializer = MessageSerializer(paginated, many=True, context={"request": request})
-    #     return paginator.get_paginated_response(serializer.data)
     
     def get(self, request):
         thread_id = request.query_params.get("thread")
